@@ -196,9 +196,9 @@ func whoAmI() -> String {
     }
 
     private func finish(with result: Result<String, Error>) {
-      listener.cancel()
       tokenContinuation?.resume(with: result)
       tokenContinuation = nil
+      listener.cancel()
     }
 
     private static func token(from request: String) -> String? {
