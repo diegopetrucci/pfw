@@ -31,12 +31,18 @@ struct Install: AsyncParsableCommand {
     let machine = try machine()
     let whoami = whoAmI()
 
-    let (data, _) = try await URLSession.shared
+    let (data, response) = try await URLSession.shared
       .data(
         from: URL(
           string: "\(URL.baseURL)/account/the-way/download?token=\(token)&machine=\(machine)&whoami=\(whoami)"
         )!
       )
+
+    guard (response as? HTTPURLResponse)?.statusCode == 200
+    else {
+      print(String(decoding: data, as: UTF8.self))
+      return
+    }
 
     let zipURL = URL.temporaryDirectory.appending(path: UUID().uuidString)
     try data.write(to: zipURL)
