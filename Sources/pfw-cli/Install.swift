@@ -27,6 +27,10 @@ struct Install: AsyncParsableCommand {
   var path: String?
 
   func run() async throws {
+    try await install(shouldRetryAfterLogin: true)
+  }
+
+  private func install(shouldRetryAfterLogin: Bool) async throws {
     let token = try loadToken()
     let machine = try machine()
     let whoami = whoAmI()
@@ -38,8 +42,21 @@ struct Install: AsyncParsableCommand {
         )!
       )
 
-    guard (response as? HTTPURLResponse)?.statusCode == 200
-    else {
+    let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+    if statusCode == 401 || statusCode == 403 {
+      guard shouldRetryAfterLogin else {
+        print(String(decoding: data, as: UTF8.self))
+        return
+      }
+      print("Authentication failed. Starting login flow...")
+      let login = Login()
+      try await login.run()
+      print("Login complete. Retrying install...")
+      try await install(shouldRetryAfterLogin: false)
+      return
+    }
+
+    guard statusCode == 200 else {
       print(String(decoding: data, as: UTF8.self))
       return
     }

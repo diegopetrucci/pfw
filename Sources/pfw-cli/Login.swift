@@ -14,13 +14,11 @@ struct Login: AsyncParsableCommand {
   @Option(help: "Paste the token received from the browser redirect.")
   var token: String?
 
-  func run() async throws {
-//    do {
-//      _ = try loadToken()
-//      print("Already logged in. Logout before trying to log in again.")
-//      return
-//    } catch {}
+  init() {
+    self.token = nil
+  }
 
+  func run() async throws {
     if let token {
       try save(token: token)
       print("Saved token to \(tokenURL.path).")
