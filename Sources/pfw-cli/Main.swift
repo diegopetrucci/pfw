@@ -7,11 +7,13 @@ struct PFW: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "pfw",
     abstract: "CLI for managing Point-Free Way skills.",
+    version: PFWVersion.current,
     subcommands: [
       Login.self,
       Logout.self,
       Status.self,
       Install.self,
+      Version.self,
     ]
   )
 }
