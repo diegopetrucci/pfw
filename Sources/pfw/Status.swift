@@ -7,9 +7,8 @@ struct Status: ParsableCommand {
   )
 
   func run() throws {
-    let fileManager = FileManager.default
-    let tokenExists = fileManager.fileExists(atPath: tokenURL.path)
-    let dataExists = fileManager.fileExists(atPath: pfwDirectoryURL.path)
+    let tokenExists = FileManager.default.fileExists(atPath: tokenURL.path)
+    let dataExists = FileManager.default.fileExists(atPath: pfwDirectoryURL.path)
 
     print("Logged in: \(tokenExists ? "yes" : "no")")
     print("Token path: \(tokenURL.path)")

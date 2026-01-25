@@ -13,16 +13,16 @@ func assertCommand(
   column: UInt = #column
 ) async throws {
   let output = try await withCapturedStdout {
-    var command = try PFW.parseAsRoot(arguments) as! AsyncParsableCommand
-    try await command.run()
+    var command = try PFW.parseAsRoot(arguments)
+    if var command = command as? AsyncParsableCommand {
+      try await command.run()
+    } else {
+      try command.run()
+    }
   }
   assertInlineSnapshot(
     of: output,
     as: .lines,
-    syntaxDescriptor: InlineSnapshotSyntaxDescriptor(
-      trailingClosureLabel: "stdout",
-      trailingClosureOffset: 1
-    ),
     matches: expected,
     fileID: fileID,
     file: file,
@@ -43,8 +43,12 @@ func assertCommandThrows(
   var thrownError: Error?
   let output = await withCapturedStderr {
     do {
-      var command = try PFW.parseAsRoot(arguments) as! AsyncParsableCommand
-      try await command.run()
+      var command = try PFW.parseAsRoot(arguments)
+      if var command = command as? AsyncParsableCommand {
+        try await command.run()
+      } else {
+        try command.run()
+      }
     } catch {
       thrownError = error
     }
@@ -96,7 +100,6 @@ func withCapturedStdout(_ body: () async throws -> Void) async rethrows -> Strin
   try await body()
 
   fflush(stdout)
-  // Restore stdout before closing the pipe's write end, or reads can hang.
   dup2(original, STDOUT_FILENO)
   close(original)
   pipe.fileHandleForWriting.closeFile()
@@ -113,7 +116,6 @@ func withCapturedStderr(_ body: () async throws -> Void) async rethrows -> Strin
   try await body()
 
   fflush(stderr)
-  // Restore stderr before closing the pipe's write end, or reads can hang.
   dup2(original, STDERR_FILENO)
   close(original)
   pipe.fileHandleForWriting.closeFile()

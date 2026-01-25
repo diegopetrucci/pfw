@@ -9,6 +9,7 @@ let package = Package(
   ],
   dependencies: [
     .package(url: "https://github.com/apple/swift-argument-parser", from: "1.5.0"),
+    .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0"),
     .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.0.0"),
     .package(url: "https://github.com/weichsel/ZIPFoundation", from: "0.9.20"),
   ],
@@ -17,6 +18,7 @@ let package = Package(
       name: "pfw",
       dependencies: [
         .product(name: "ArgumentParser", package: "swift-argument-parser"),
+        .product(name: "Dependencies", package: "swift-dependencies"),
         .product(name: "ZIPFoundation", package: "ZIPFoundation")
       ]
     ),
