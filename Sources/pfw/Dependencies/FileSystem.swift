@@ -58,6 +58,9 @@ final class InMemoryFileSystem: FileSystem {
   enum Error: Swift.Error, Equatable {
     case directoryNotFound(String)
     case fileNotFound(String)
+    case fileExists(String)
+    case notDirectory(String)
+    case isDirectory(String)
   }
 
   struct State {
@@ -98,12 +101,23 @@ final class InMemoryFileSystem: FileSystem {
     attributes: [FileAttributeKey: Any]?
   ) throws {
     let path = normalize(url)
-    state.withValue { state in
+    try state.withValue { state in
+      guard state.files[path] == nil else {
+        throw Error.fileExists(path)
+      }
+
       if createIntermediates {
         for directory in pathPrefixes(path) {
+          guard state.files[directory] == nil else {
+            throw Error.notDirectory(directory)
+          }
           state.directories.insert(directory)
         }
       } else {
+        let parent = normalize((path as NSString).deletingLastPathComponent)
+        guard state.directories.contains(parent) else {
+          throw Error.directoryNotFound(parent)
+        }
         state.directories.insert(path)
       }
     }
@@ -152,10 +166,13 @@ final class InMemoryFileSystem: FileSystem {
 
   func write(_ data: Data, to url: URL) throws {
     let path = normalize(url)
-    let directory = normalize((path as NSString).deletingLastPathComponent)
+    let directory = normalize(url.deletingLastPathComponent())
     try state.withValue { state in
       guard state.directories.contains(directory) else {
         throw Error.directoryNotFound(directory)
+      }
+      guard !state.directories.contains(path) else {
+        throw Error.isDirectory(path)
       }
       state.files[path] = data
     }
@@ -164,6 +181,9 @@ final class InMemoryFileSystem: FileSystem {
   func data(at url: URL) throws -> Data {
     let path = normalize(url)
     return try state.withValue { state in
+      guard !state.directories.contains(path) else {
+        throw Error.isDirectory(path)
+      }
       guard let data = state.files[path] else {
         throw Error.fileNotFound(path)
       }
