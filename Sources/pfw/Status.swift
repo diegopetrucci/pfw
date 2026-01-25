@@ -1,4 +1,5 @@
 import ArgumentParser
+import Dependencies
 import Foundation
 
 struct Status: ParsableCommand {
@@ -7,8 +8,10 @@ struct Status: ParsableCommand {
   )
 
   func run() throws {
-    let tokenExists = FileManager.default.fileExists(atPath: tokenURL.path)
-    let dataExists = FileManager.default.fileExists(atPath: pfwDirectoryURL.path)
+    @Dependency(\.fileSystem) var fileSystem
+    
+    let tokenExists = fileSystem.fileExists(atPath: tokenURL.path)
+    let dataExists = fileSystem.fileExists(atPath: pfwDirectoryURL.path)
 
     print("Logged in: \(tokenExists ? "yes" : "no")")
     print("Token path: \(tokenURL.path)")

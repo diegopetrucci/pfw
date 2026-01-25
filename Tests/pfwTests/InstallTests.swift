@@ -4,8 +4,20 @@ import Testing
 
 extension BaseSuite {
   @Suite struct InstallTests {
-    @Test func basics() async throws {
-      try await assertCommand(["install", "--tool", "claude"])
+    @Test func noToolSpecified() async throws {
+      await assertCommandThrows(["install"]) {
+        """
+        Missing expected argument '--tool <tool>'
+        """
+      }
+    }
+
+    @Test func loggedOut() async throws {
+      await assertCommandThrows(["install", "--tool", "codex"]) {
+        """
+        No token found. Run `pfw login` first.
+        """
+      }
     }
   }
 }

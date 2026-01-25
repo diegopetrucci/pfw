@@ -1,4 +1,5 @@
 import ArgumentParser
+import Dependencies
 import Foundation
 import ZIPFoundation
 
@@ -15,7 +16,10 @@ struct Install: AsyncParsableCommand {
     case codex
     case claude
     var defaultInstallPath: URL {
-      URL(filePath: "~/.\(rawValue)/skills/the-point-free-way")
+      @Dependency(\.fileSystem) var fileSystem
+      return fileSystem.homeDirectoryForCurrentUser
+        .appending(path: rawValue)
+        .appending(path: "skills/the-point-free-way")
     }
   }
 
@@ -25,7 +29,7 @@ struct Install: AsyncParsableCommand {
       Options: \(Tool.allCases.map(\.rawValue).joined(separator: ", ")).
       """
   )
-  var tool: Tool = .codex
+  var tool: Tool
 
   @Option(help: "Directory to install skills into.")
   var path: String?

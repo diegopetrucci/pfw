@@ -2,6 +2,8 @@ import ArgumentParser
 import Darwin
 import Foundation
 import InlineSnapshotTesting
+import Testing
+
 @testable import pfw
 
 func assertCommand(
@@ -41,54 +43,40 @@ func assertCommandThrows(
   column: UInt = #column
 ) async {
   var thrownError: Error?
-  let output = await withCapturedStderr {
-    do {
-      var command = try PFW.parseAsRoot(arguments)
-      if var command = command as? AsyncParsableCommand {
-        try await command.run()
-      } else {
-        try command.run()
-      }
-    } catch {
-      thrownError = error
+  do {
+    var command = try PFW.parseAsRoot(arguments)
+    if var command = command as? AsyncParsableCommand {
+      try await command.run()
+    } else {
+      try command.run()
     }
+  } catch {
+    thrownError = error
   }
 
   guard let thrownError else {
-    preconditionFailure("Expected command to throw.")
+    Issue
+      .record(
+        "Expected command to throw.",
+        sourceLocation: SourceLocation.init(
+          fileID: String(describing: fileID),
+          filePath: String(describing: file),
+          line: Int(line),
+          column: Int(column)
+        )
+      )
+    return
   }
 
-  if let stderr {
-    assertInlineSnapshot(
-      of: output,
-      as: .lines,
-      syntaxDescriptor: InlineSnapshotSyntaxDescriptor(
-        trailingClosureLabel: "stderr",
-        trailingClosureOffset: 1
-      ),
-      matches: stderr,
-      fileID: fileID,
-      file: file,
-      line: line,
-      column: column
-    )
-  } else if let error {
-    assertInlineSnapshot(
-      of: String(describing: thrownError),
-      as: .lines,
-      syntaxDescriptor: InlineSnapshotSyntaxDescriptor(
-        trailingClosureLabel: "error",
-        trailingClosureOffset: 1
-      ),
-      matches: error,
-      fileID: fileID,
-      file: file,
-      line: line,
-      column: column
-    )
-  } else {
-    preconditionFailure("Provide a stderr or error snapshot closure.")
-  }
+  assertInlineSnapshot(
+    of: PFW.message(for: thrownError),
+    as: .lines,
+    matches: error,
+    fileID: fileID,
+    file: file,
+    line: line,
+    column: column
+  )
 }
 
 func withCapturedStdout(_ body: () async throws -> Void) async rethrows -> String {
