@@ -157,7 +157,18 @@ final class InMemoryFileSystem: FileSystem {
     progress: Progress?,
     pathEncoding: String.Encoding?
   ) throws {
-    fatalError("unzipItem is not implemented in InMemoryFileSystem.")
+    let archiveData = try data(at: sourceURL)
+    let files = try JSONDecoder().decode([URL: Data].self, from: archiveData)
+
+    for (sourcePath, contents) in files {
+      let relativePath = sourcePath.path.hasPrefix("/")
+        ? String(sourcePath.path.dropFirst())
+        : sourcePath.path
+      let destination = destinationURL.appendingPathComponent(relativePath)
+      let parent = destination.deletingLastPathComponent()
+      try createDirectory(at: parent, withIntermediateDirectories: true, attributes: nil)
+      try write(contents, to: destination)
+    }
   }
 
   var homeDirectoryForCurrentUser: URL {
@@ -190,6 +201,79 @@ final class InMemoryFileSystem: FileSystem {
       return data
     }
   }
+}
+
+extension InMemoryFileSystem: CustomStringConvertible {
+  var description: String {
+    state.withValue { state in
+      let root = FileNode(name: "/")
+      for directory in state.directories {
+        insert(path: directory, into: root, data: nil)
+      }
+      for (path, data) in state.files {
+        insert(path: path, into: root, data: data)
+      }
+      var lines: [String] = []
+      for child in root.children.keys.sorted() {
+        if let childNode = root.children[child] {
+          render(node: childNode, into: &lines, indent: "")
+        }
+      }
+      return lines.joined(separator: "\n")
+    }
+  }
+}
+
+private final class FileNode {
+  let name: String
+  var children: [String: FileNode] = [:]
+  var data: Data?
+
+  init(name: String, data: Data? = nil) {
+    self.name = name
+    self.data = data
+  }
+}
+
+private func insert(path: String, into root: FileNode, data: Data?) {
+  let components = (path as NSString).pathComponents
+  guard !components.isEmpty else { return }
+  var current = root
+  for component in components {
+    if component == "/" { continue }
+    let node = current.children[component] ?? FileNode(name: component)
+    current.children[component] = node
+    current = node
+  }
+  if let data {
+    current.data = data
+  }
+}
+
+private func render(node: FileNode, into lines: inout [String], indent: String) {
+  if node.data == nil {
+    lines.append("\(indent)\(node.name)/")
+  } else {
+    let suffix = fileSummary(data: node.data!)
+    lines.append("\(indent)\(node.name) \(suffix)")
+  }
+  let nextIndent = indent + "  "
+  for child in node.children.keys.sorted() {
+    if let childNode = node.children[child] {
+      render(node: childNode, into: &lines, indent: nextIndent)
+    }
+  }
+}
+
+private func fileSummary(data: Data) -> String {
+  if data.count < 20, let string = String(data: data, encoding: .utf8) {
+    let sanitized = string
+      .replacingOccurrences(of: "\n", with: "\\n")
+      .replacingOccurrences(of: "\r", with: "\\r")
+      .replacingOccurrences(of: "\t", with: "\\t")
+    return "\"\(sanitized)\""
+  }
+  return "(\(data.count) bytes)"
 }
 
 enum FileSystemKey: DependencyKey {
