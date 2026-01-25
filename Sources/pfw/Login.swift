@@ -56,6 +56,8 @@ func performLogin(token: String?) async throws {
 }
 
 func makeLoginURL(redirectURL: URL?) throws -> URL {
+  @Dependency(\.whoAmI) var whoAmI
+  
   guard var components = URLComponents(string: URL.baseURL) else {
     return URL(string: "https://www.pointfree.co/account/the-way/login")!
   }
@@ -69,27 +71,4 @@ func makeLoginURL(redirectURL: URL?) throws -> URL {
   }
   components.queryItems = items
   return components.url ?? URL(string: "https://www.pointfree.co/account/the-way/login")!
-}
-
-func whoAmI() -> String {
-  #if os(macOS) || os(Linux)
-    let process = Process()
-    process.executableURL = URL(fileURLWithPath: "/usr/bin/whoami")
-    let output = Pipe()
-    process.standardOutput = output
-    do {
-      try process.run()
-      process.waitUntilExit()
-      let data = output.fileHandleForReading.readDataToEndOfFile()
-      let value = String(data: data, encoding: .utf8)?
-        .trimmingCharacters(in: .whitespacesAndNewlines)
-      if let value, !value.isEmpty {
-        return value
-      }
-    } catch {
-      // Fall back to the system username.
-    }
-  #endif
-  let fallback = NSUserName()
-  return fallback.isEmpty ? "unknown" : fallback
 }

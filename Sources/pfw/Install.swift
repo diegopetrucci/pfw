@@ -40,15 +40,16 @@ struct Install: AsyncParsableCommand {
 
   private func install(shouldRetryAfterLogin: Bool) async throws {
     @Dependency(\.uuid) var uuid
+    @Dependency(\.whoAmI) var whoAmI
+
     let token = try loadToken()
     let machine = try machine()
-    let whoami = whoAmI()
 
     let (data, response) = try await URLSession.shared
       .data(
         from: URL(
           string:
-            "\(URL.baseURL)/account/the-way/download?token=\(token)&machine=\(machine)&whoami=\(whoami)"
+            "\(URL.baseURL)/account/the-way/download?token=\(token)&machine=\(machine)&whoami=\(whoAmI())"
         )!
       )
 

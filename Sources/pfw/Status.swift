@@ -17,10 +17,5 @@ struct Status: ParsableCommand {
     print("Token path: \(tokenURL.path)")
     print("Data directory: \(pfwDirectoryURL.path)")
     print("Data directory exists: \(dataExists ? "yes" : "no")")
-
-    let codexPath = Install.Tool.codex.defaultInstallPath.path
-    let claudePath = Install.Tool.claude.defaultInstallPath.path
-    print("Default install path (codex): \(codexPath)")
-    print("Default install path (claude): \(claudePath)")
   }
 }

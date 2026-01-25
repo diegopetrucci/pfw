@@ -11,8 +11,6 @@ extension BaseSuite {
         Token path: /Users/blob/.pfw/token
         Data directory: /Users/blob/.pfw
         Data directory exists: no
-        Default install path (codex): /Users/blob/codex/skills/the-point-free-way
-        Default install path (claude): /Users/blob/claude/skills/the-point-free-way
         """
       }
     }

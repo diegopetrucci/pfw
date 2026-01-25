@@ -29,7 +29,7 @@ extension BaseSuite {
       try await assertCommand(["login"]) {
         """
         Open this URL to log in and approve access:
-        http://localhost:8080/account/the-way/login?whoami=brandon&machine=00000000-0000-0000-0000-000000000000&redirect=http://localhost:1234/callback
+        http://localhost:8080/account/the-way/login?whoami=blob&machine=00000000-0000-0000-0000-000000000000&redirect=http://localhost:1234/callback
 
         Waiting for browser redirect...
         Saved token to /Users/blob/.pfw/token.
@@ -38,7 +38,7 @@ extension BaseSuite {
       mockOpenInBrowser.assertOpenedURLs([
         URL(
           string:
-            "http://localhost:8080/account/the-way/login?whoami=brandon&machine=00000000-0000-0000-0000-000000000000&redirect=http://localhost:1234/callback"
+            "http://localhost:8080/account/the-way/login?whoami=blob&machine=00000000-0000-0000-0000-000000000000&redirect=http://localhost:1234/callback"
         )!
       ])
       #expect(

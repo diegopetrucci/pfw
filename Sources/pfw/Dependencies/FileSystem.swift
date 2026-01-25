@@ -111,7 +111,10 @@ final class InMemoryFileSystem: FileSystem {
 
   func removeItem(at url: URL) throws {
     let path = normalize(url)
-    state.withValue { state in
+    try state.withValue { state in
+      guard state.files[path] != nil || state.directories.contains(path) else {
+        throw Error.fileNotFound(path)
+      }
       state.files.removeValue(forKey: path)
       state.directories.remove(path)
 
