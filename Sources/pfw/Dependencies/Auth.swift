@@ -1,22 +1,20 @@
+#if canImport(Network)
 import ArgumentParser
 import Dependencies
 import Foundation
 import Synchronization
 
-#if canImport(Network)
   import Network
-#endif
+
 
 protocol Auth: Sendable {
   func start() async throws -> URL
   func waitForToken() async throws -> String
 }
 
-  enum AuthKey: DependencyKey {
-#if canImport(Network)
-    static var liveValue: any Auth { try! LocalAuthServer() }
-#endif
-  }
+private enum AuthKey: DependencyKey {
+  static var liveValue: any Auth { try! LocalAuthServer() }
+}
 
 extension DependencyValues {
   var auth: any Auth {
@@ -25,7 +23,6 @@ extension DependencyValues {
   }
 }
 
-#if canImport(Network)
   actor LocalAuthServer: Auth {
     private let listener: NWListener
     private let queue = DispatchQueue(label: "pfw.auth.server")
@@ -123,4 +120,5 @@ extension DependencyValues {
       )
     }
   }
+
 #endif

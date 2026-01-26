@@ -19,7 +19,6 @@ struct Login: AsyncParsableCommand {
 }
 
 func performLogin(token: String?) async throws {
-  @Dependency(\.auth) var auth
   @Dependency(\.openInBrowser) var openInBrowser
 
   if let token {
@@ -29,6 +28,7 @@ func performLogin(token: String?) async throws {
   }
 
   #if canImport(Network)
+    @Dependency(\.auth) var auth
     let redirectURL = try await auth.start()
     let loginURL = try makeLoginURL(redirectURL: redirectURL)
     print("Open this URL to log in and approve access:")
