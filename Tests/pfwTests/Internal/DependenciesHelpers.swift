@@ -7,7 +7,7 @@ extension DependencyValues {
   func login() async throws {
     var command = try #require(try PFW.parseAsRoot(["login"]) as? AsyncParsableCommand)
     try await command.run()
-    (openInBrowser as! MockOpenInBrowser).skipAssertions()
+    try #require(openInBrowser as? MockOpenInBrowser).skipAssertions()
   }
 }
 
