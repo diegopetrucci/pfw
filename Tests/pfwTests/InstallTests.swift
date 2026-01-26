@@ -14,9 +14,11 @@ extension BaseSuite {
         redirectURL: URL(string: "http://localhost:1234/callback"),
         token: "deadbeef"
       )
+      $0.continuousClock = TestClock()
     }
   )
   @MainActor struct InstallTests {
+    @Dependency(\.continuousClock, as: TestClock<Duration>.self) var clock
     @Dependency(\.fileSystem, as: InMemoryFileSystem.self) var fileSystem
 
     @Test func noToolSpecified() async throws {
@@ -36,21 +38,25 @@ extension BaseSuite {
     }
 
     @Test(
-      .dependencies {
+      .dependencies { dependencies in
         try save(token: "expired-deadbeef")
-        $0.pointFreeServer = try InMemoryPointFreeServer(
-          result: .success(
-            [
-              URL(filePath: "/skills/ComposableArchitecture/SKILL.md"): Data(
-                """
-                # Composable Architecture
-                """.utf8
-              )
-            ].toData
-          )
+        dependencies.pointFreeServer = InMemoryPointFreeServer.init(
+          results: [
+            .failure(.notLoggedIn("Token expired")),
+            .success(
+              try [
+                URL(filePath: "/skills/ComposableArchitecture/SKILL.md"): Data(
+                  """
+                  # Composable Architecture
+                  """.utf8
+                )
+              ].toData
+            ),
+          ]
         )
       }
-    ) func expiredToken() async throws {
+    )
+    func expiredToken() async throws {
       assertInlineSnapshot(of: fileSystem, as: .description) {
         """
         Users/
@@ -60,11 +66,23 @@ extension BaseSuite {
         tmp/
         """
       }
-      try await assertCommand(["install", "--tool", "codex"]) {
-        """
-        Installed skills for codex into /Users/blob/.codex/skills/the-point-free-way
-        """
+      let task = Task {
+        try await assertCommand(["install", "--tool", "codex"]) {
+          """
+          Authentication failed. Starting login flow...
+          Open this URL to log in and approve access:
+          http://localhost:8080/account/the-way/login?whoami=blob&machine=00000000-0000-0000-0000-000000000001&redirect=http://localhost:1234/callback
+
+          Waiting for browser redirect...
+          Saved token to /Users/blob/.pfw/token.
+          Login complete. Retrying install...
+          Installed skills for codex into /Users/blob/.codex/skills/the-point-free-way
+          """
+        }
       }
+      try await Task.sleep(for: .seconds(0.5))
+      await clock.run()
+      try await task.value
       assertInlineSnapshot(of: fileSystem, as: .description) {
         """
         Users/
@@ -76,10 +94,10 @@ extension BaseSuite {
                     ComposableArchitecture/
                       SKILL.md "# Composable Architecture"
             .pfw/
-              machine "00000000-0000-0000-0000-000000000000"
-              token "expired-deadbeef"
+              machine "00000000-0000-0000-0000-000000000002"
+              token "deadbeef"
         tmp/
-          00000000-0000-0000-0000-000000000001 (94 bytes)
+          00000000-0000-0000-0000-000000000003 (94 bytes)
         """
       }
     }
@@ -88,9 +106,9 @@ extension BaseSuite {
       .dependencies {
         var command = try #require(try PFW.parseAsRoot(["login"]) as? AsyncParsableCommand)
         try await command.run()
-        $0.pointFreeServer = try InMemoryPointFreeServer(
+        $0.pointFreeServer = InMemoryPointFreeServer(
           result: .success(
-            [
+            try [
               URL(filePath: "/skills/ComposableArchitecture/SKILL.md"): Data(
                 """
                 # Composable Architecture
@@ -173,26 +191,26 @@ extension BaseSuite {
       }
 
       // NB: This test shows a problem with using the '--path' option that we need to fix.
-//      @Test(
-//        .dependencies {
-//          try $0.fileSystem.createDirectory(
-//            at: URL(filePath: "/Users/blob/.copilot/skills"),
-//            withIntermediateDirectories: true
-//          )
-//          try $0.fileSystem.write(
-//            Data("Hello".utf8),
-//            to: URL(filePath: "/Users/blob/.copilot/skills/dont-delete.md")
-//          )
-//        }
-//      )
-//      func customPath() async throws {
-//        try await assertCommand(["install", "--path", "/Users/blob/.copilot/skills"]) {
-//          """
-//          Installed skills into /Users/blob/.copilot/skills
-//          """
-//        }
-//        assertInlineSnapshot(of: fileSystem, as: .description)
-//      }
+      //      @Test(
+      //        .dependencies {
+      //          try $0.fileSystem.createDirectory(
+      //            at: URL(filePath: "/Users/blob/.copilot/skills"),
+      //            withIntermediateDirectories: true
+      //          )
+      //          try $0.fileSystem.write(
+      //            Data("Hello".utf8),
+      //            to: URL(filePath: "/Users/blob/.copilot/skills/dont-delete.md")
+      //          )
+      //        }
+      //      )
+      //      func customPath() async throws {
+      //        try await assertCommand(["install", "--path", "/Users/blob/.copilot/skills"]) {
+      //          """
+      //          Installed skills into /Users/blob/.copilot/skills
+      //          """
+      //        }
+      //        assertInlineSnapshot(of: fileSystem, as: .description)
+      //      }
     }
   }
 }

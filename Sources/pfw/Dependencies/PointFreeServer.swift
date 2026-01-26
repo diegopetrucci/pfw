@@ -37,19 +37,28 @@ struct LivePointFreeServer: PointFreeServer {
   }
 }
 
-struct InMemoryPointFreeServer: PointFreeServer {
-  var result: Result<Data, PointFreeServerError>
+actor InMemoryPointFreeServer: PointFreeServer {
+  @Dependency(\.continuousClock) var clock
+  var results: [Result<Data, PointFreeServerError>] = []
+
+  init(results: [Result<Data, PointFreeServerError>]) {
+    self.results = results
+  }
 
   init(result: Result<Data, PointFreeServerError>) {
-    self.result = result
+    self.results = [result]
   }
 
   func downloadSkills(token: String, machine: UUID, whoami: String) async throws -> Data {
-    try result.get()
-  }
-
-  static func archive(_ files: [URL: Data]) throws -> InMemoryPointFreeServer {
-    try InMemoryPointFreeServer(result: .success(JSONEncoder().encode(files)))
+    guard !results.isEmpty
+    else {
+      throw PointFreeServerError.invalidResponse
+    }
+    let result = results.removeFirst()
+    if !results.isEmpty {
+      try await clock.sleep(for: .seconds(1))
+    }
+    return try result.get()
   }
 }
 
