@@ -83,6 +83,10 @@ final class InMemoryFileSystem: FileSystem {
     files: [String: Data] = [:],
     directories: Set<String> = []
   ) {
+    var directories = directories
+    // NB: Make sure the file systme always has the home and tmp directories.
+    _ = directories.insert(normalize(homeDirectoryForCurrentUser))
+    _ = directories.insert(normalize(Self.temporaryDirectory))
     let state = State(
       files: files,
       directories: directories,
@@ -90,10 +94,6 @@ final class InMemoryFileSystem: FileSystem {
       homeDirectoryForCurrentUser: homeDirectoryForCurrentUser
     )
     self.state = LockIsolated(state)
-    self.state.withValue {
-      _ = $0.directories.insert(normalize(homeDirectoryForCurrentUser))
-      _ = $0.directories.insert(normalize(Self.temporaryDirectory))
-    }
   }
 
   var filePaths: Set<String> {
