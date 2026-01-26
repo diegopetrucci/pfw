@@ -24,10 +24,16 @@ struct Install: AsyncParsableCommand {
       Options: \(Tool.allCases.map(\.rawValue).joined(separator: ", ")).
       """
   )
-  var tool: Tool
+  var tool: Tool?
 
   @Option(help: "Directory to install skills into.")
   var path: String?
+
+  func validate() throws {
+    guard tool != nil || path != nil else {
+      throw ValidationError("Provide either --tool or --path.")
+    }
+  }
 
   func run() async throws {
     try await install(shouldRetryAfterLogin: true)
@@ -76,9 +82,14 @@ struct Install: AsyncParsableCommand {
     let zipURL = type(of: fileSystem).temporaryDirectory.appending(path: uuid().uuidString)
     try fileSystem.write(data, to: zipURL)
 
-    let installURL = URL(fileURLWithPath: path ?? tool.defaultInstallPath.path)
+    let installPath = path ?? tool?.defaultInstallPath.path ?? ""
+    let installURL = URL(fileURLWithPath: installPath)
     try? fileSystem.removeItem(at: installURL)
     try fileSystem.unzipItem(at: zipURL, to: installURL)
-    print("Installed skills for \(tool.rawValue) into \(installURL.path)")
+    if let tool {
+      print("Installed skills for \(tool.rawValue) into \(installURL.path)")
+    } else {
+      print("Installed skills into \(installURL.path)")
+    }
   }
 }
