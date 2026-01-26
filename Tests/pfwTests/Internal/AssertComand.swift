@@ -11,16 +11,15 @@ import Testing
   @preconcurrency import Glibc
 #endif
 
-nonisolated(nonsending)
-  func assertCommand(
-    _ arguments: [String],
-    stdout expected: (() -> String)? = nil,
-    fileID: StaticString = #fileID,
-    file: StaticString = #filePath,
-    line: UInt = #line,
-    column: UInt = #column
-  ) async throws
-{
+@MainActor
+func assertCommand(
+  _ arguments: [String],
+  stdout expected: (() -> String)? = nil,
+  fileID: StaticString = #fileID,
+  file: StaticString = #filePath,
+  line: UInt = #line,
+  column: UInt = #column
+) async throws {
   let output = try await withCapturedStdout {
     var command = try PFW.parseAsRoot(arguments)
     if var command = command as? AsyncParsableCommand {
@@ -40,16 +39,15 @@ nonisolated(nonsending)
   )
 }
 
-nonisolated(nonsending)
-  func assertCommandThrows(
-    _ arguments: [String],
-    error: (() -> String)? = nil,
-    fileID: StaticString = #fileID,
-    file: StaticString = #filePath,
-    line: UInt = #line,
-    column: UInt = #column
-  ) async
-{
+@MainActor
+func assertCommandThrows(
+  _ arguments: [String],
+  error: (() -> String)? = nil,
+  fileID: StaticString = #fileID,
+  file: StaticString = #filePath,
+  line: UInt = #line,
+  column: UInt = #column
+) async {
   var thrownError: Error?
   do {
     var command = try PFW.parseAsRoot(arguments)
