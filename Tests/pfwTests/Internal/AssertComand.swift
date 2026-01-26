@@ -3,6 +3,12 @@ import Foundation
 import InlineSnapshotTesting
 import Testing
 
+#if canImport(Darwin)
+  @preconcurrency import Darwin
+#else
+  @preconcurrency import Glibc
+#endif
+
 @testable import pfw
 
 nonisolated(nonsending)
@@ -80,7 +86,8 @@ func assertCommandThrows(
 }
 
 // TODO: Explore a dependency alternative to this.
-func withCapturedStdout(_ body: () async throws -> Void) async rethrows -> String {
+@MainActor
+private func withCapturedStdout(_ body: () async throws -> Void) async rethrows -> String {
   let pipe = Pipe()
   let original = dup(STDOUT_FILENO)
   fflush(stdout)
