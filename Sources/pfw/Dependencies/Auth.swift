@@ -1,8 +1,11 @@
 import ArgumentParser
 import Dependencies
 import Foundation
-import Network
 import Synchronization
+
+#if canImport(Network)
+  import Network
+#endif
 
 protocol Auth: Sendable {
   func start() async throws -> URL
@@ -11,7 +14,7 @@ protocol Auth: Sendable {
 
 private enum AuthKey: DependencyKey {
   static var liveValue: any Auth {
-    #if canImport(Networking)
+    #if canImport(Network)
       return try! LocalAuthServer()
     #else
       return UnimplementedAuthServer()

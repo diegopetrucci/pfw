@@ -2,10 +2,6 @@ import ArgumentParser
 import Dependencies
 import Foundation
 
-#if canImport(Network)
-  import Network
-#endif
-
 struct Login: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     abstract: "Log into your Point-Free account."
