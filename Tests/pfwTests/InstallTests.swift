@@ -85,7 +85,7 @@ extension BaseSuite {
           Waiting for browser redirect...
           Saved token to /Users/blob/.pfw/token.
           Login complete. Retrying install...
-          Installed skills for codex into /Users/blob/.codex/skills/the-point-free-way
+          Installed skills for codex into /Users/blob/.codex/skills
           """
         }
       }
@@ -104,15 +104,12 @@ extension BaseSuite {
           blob/
             .codex/
               skills/
-                the-point-free-way/
-                  skills/
-                    ComposableArchitecture/
-                      SKILL.md "# Composable Architecture"
+                pfw-ComposableArchitecture/
+                  SKILL.md "# Composable Architecture"
             .pfw/
               machine "00000000-0000-0000-0000-000000000002"
               token "deadbeef"
         tmp/
-          00000000-0000-0000-0000-000000000003 (94 bytes)
         """
       }
     }
@@ -149,7 +146,7 @@ extension BaseSuite {
       @Test func codex() async throws {
         try await assertCommand(["install", "--tool", "codex"]) {
           """
-          Installed skills for codex into /Users/blob/.codex/skills/the-point-free-way
+          Installed skills for codex into /Users/blob/.codex/skills
           """
         }
         assertInlineSnapshot(of: fileSystem, as: .description) {
@@ -158,19 +155,70 @@ extension BaseSuite {
             blob/
               .codex/
                 skills/
-                  the-point-free-way/
-                    skills/
-                      ComposableArchitecture/
-                        SKILL.md "# Composable Architecture"
-                        references/
-                          navigation.md "# Navigation"
-                      SQLiteData/
-                        SKILL.md "# SQLiteData"
+                  pfw-ComposableArchitecture/
+                    SKILL.md "# Composable Architecture"
+                    references/
+                      navigation.md "# Navigation"
+                  pfw-SQLiteData/
+                    SKILL.md "# SQLiteData"
               .pfw/
                 machine "00000000-0000-0000-0000-000000000001"
                 token "deadbeef"
           tmp/
-            00000000-0000-0000-0000-000000000002 (245 bytes)
+          """
+        }
+      }
+
+      @Test func deletesPreviousPFWDirectories() async throws {
+        try fileSystem.createDirectory(
+          at: URL(filePath: "/Users/blob/.codex/skills/pfw-ComposableArchitecture"),
+          withIntermediateDirectories: true
+        )
+        try fileSystem.write(
+          Data("Old stuff".utf8),
+          to: URL(filePath: "/Users/blob/.codex/skills/pfw-ComposableArchitecture/SKILL.md")
+        )
+        try fileSystem.createDirectory(
+          at: URL(filePath: "/Users/blob/.codex/skills/pfw-UnrecognizedSkill"),
+          withIntermediateDirectories: true
+        )
+        assertInlineSnapshot(of: fileSystem, as: .description) {
+          """
+          Users/
+            blob/
+              .codex/
+                skills/
+                  pfw-ComposableArchitecture/
+                    SKILL.md "Old stuff"
+                  pfw-UnrecognizedSkill/
+              .pfw/
+                machine "00000000-0000-0000-0000-000000000000"
+                token "deadbeef"
+          tmp/
+          """
+        }
+
+        try await assertCommand(["install", "--tool", "codex"]) {
+          """
+          Installed skills for codex into /Users/blob/.codex/skills
+          """
+        }
+        assertInlineSnapshot(of: fileSystem, as: .description) {
+          """
+          Users/
+            blob/
+              .codex/
+                skills/
+                  pfw-ComposableArchitecture/
+                    SKILL.md "# Composable Architecture"
+                    references/
+                      navigation.md "# Navigation"
+                  pfw-SQLiteData/
+                    SKILL.md "# SQLiteData"
+              .pfw/
+                machine "00000000-0000-0000-0000-000000000001"
+                token "deadbeef"
+          tmp/
           """
         }
       }
@@ -178,7 +226,7 @@ extension BaseSuite {
       @Test func claude() async throws {
         try await assertCommand(["install", "--tool", "claude"]) {
           """
-          Installed skills for claude into /Users/blob/.claude/skills/the-point-free-way
+          Installed skills for claude into /Users/blob/.claude/skills
           """
         }
         assertInlineSnapshot(of: fileSystem, as: .description) {
@@ -187,19 +235,16 @@ extension BaseSuite {
             blob/
               .claude/
                 skills/
-                  the-point-free-way/
-                    skills/
-                      ComposableArchitecture/
-                        SKILL.md "# Composable Architecture"
-                        references/
-                          navigation.md "# Navigation"
-                      SQLiteData/
-                        SKILL.md "# SQLiteData"
+                  pfw-ComposableArchitecture/
+                    SKILL.md "# Composable Architecture"
+                    references/
+                      navigation.md "# Navigation"
+                  pfw-SQLiteData/
+                    SKILL.md "# SQLiteData"
               .pfw/
                 machine "00000000-0000-0000-0000-000000000001"
                 token "deadbeef"
           tmp/
-            00000000-0000-0000-0000-000000000002 (245 bytes)
           """
         }
       }

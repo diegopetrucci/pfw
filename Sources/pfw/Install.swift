@@ -14,7 +14,7 @@ struct Install: AsyncParsableCommand {
       @Dependency(\.fileSystem) var fileSystem
       return fileSystem.homeDirectoryForCurrentUser
         .appending(path: ".\(rawValue)")
-        .appending(path: "skills/the-point-free-way")
+        .appending(path: "skills")
     }
   }
 
@@ -79,17 +79,43 @@ struct Install: AsyncParsableCommand {
       }
     }
 
-    let zipURL = type(of: fileSystem).temporaryDirectory.appending(path: uuid().uuidString)
+    let zipURL = type(of: fileSystem).temporaryDirectory.appending(path: uuid().uuidString + ".zip")
     try fileSystem.write(data, to: zipURL)
 
     let installPath = path ?? tool?.defaultInstallPath.path ?? ""
-    let installURL = URL(fileURLWithPath: installPath)
-    try? fileSystem.removeItem(at: installURL)
-    try fileSystem.unzipItem(at: zipURL, to: installURL)
+    let skillsURL = URL(fileURLWithPath: installPath)
+    try fileSystem.createDirectory(at: skillsURL, withIntermediateDirectories: true)
+
+    let tempUnzipURL = type(of: fileSystem).temporaryDirectory.appending(path: uuid().uuidString)
+    try fileSystem.createDirectory(at: tempUnzipURL, withIntermediateDirectories: true)
+    try fileSystem.unzipItem(at: zipURL, to: tempUnzipURL)
+
+    let skillsSourceURL = tempUnzipURL.appendingPathComponent("skills")
+    guard fileSystem.fileExists(atPath: skillsSourceURL.path)
+    else {
+      print("Could not unzip skills.")
+      throw ExitCode.failure
+    }
+
+    let existing = (try? fileSystem.contentsOfDirectory(at: skillsURL)) ?? []
+    for url in existing where url.lastPathComponent.hasPrefix("pfw-") {
+      try? fileSystem.removeItem(at: url)
+    }
+
+    let skillDirectories = (try? fileSystem.contentsOfDirectory(at: skillsSourceURL)) ?? []
+    for directory in skillDirectories {
+      let name = directory.lastPathComponent
+      let destination = skillsURL.appendingPathComponent("pfw-\(name)")
+      try fileSystem.moveItem(at: directory, to: destination)
+    }
+
+    try? fileSystem.removeItem(at: zipURL)
+    try? fileSystem.removeItem(at: tempUnzipURL)
+
     if let tool {
-      print("Installed skills for \(tool.rawValue) into \(installURL.path)")
+      print("Installed skills for \(tool.rawValue) into \(skillsURL.path)")
     } else {
-      print("Installed skills into \(installURL.path)")
+      print("Installed skills into \(skillsURL.path)")
     }
   }
 }
