@@ -92,12 +92,12 @@ nonisolated(nonsending)
 private func withCapturedStdout(_ body: () async throws -> Void) async rethrows -> String {
   let pipe = Pipe()
   let original = dup(STDOUT_FILENO)
-  fflush(stdout)
+  fflush(nil)
   dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
 
   try await body()
 
-  fflush(stdout)
+  fflush(nil)
   dup2(original, STDOUT_FILENO)
   close(original)
   pipe.fileHandleForWriting.closeFile()
