@@ -1,6 +1,7 @@
 import ArgumentParser
 import Dependencies
 import Foundation
+
 #if canImport(Network)
   import Network
 #endif
@@ -57,7 +58,7 @@ func performLogin(token: String?) async throws {
 
 func makeLoginURL(redirectURL: URL?) throws -> URL {
   @Dependency(\.whoAmI) var whoAmI
-  
+
   guard var components = URLComponents(string: URL.baseURL) else {
     return URL(string: "https://www.pointfree.co/account/the-way/login")!
   }
