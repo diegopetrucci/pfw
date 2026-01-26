@@ -1,4 +1,6 @@
+import ConcurrencyExtras
 import Foundation
+
 @testable import pfw
 
 final class InMemoryFileSystem: FileSystem {
@@ -76,9 +78,10 @@ final class InMemoryFileSystem: FileSystem {
   func removeItem(at url: URL) throws {
     let path = normalize(url)
     try state.withValue { state in
-      guard state.files[path] != nil
-        || state.directories.contains(path)
-        || state.symbolicLinks[path] != nil
+      guard
+        state.files[path] != nil
+          || state.directories.contains(path)
+          || state.symbolicLinks[path] != nil
       else {
         throw Error.fileNotFound(path)
       }
@@ -120,7 +123,8 @@ final class InMemoryFileSystem: FileSystem {
     let files = try JSONDecoder().decode([URL: Data].self, from: archiveData)
 
     for (sourcePath, contents) in files {
-      let relativePath = sourcePath.path.hasPrefix("/")
+      let relativePath =
+        sourcePath.path.hasPrefix("/")
         ? String(sourcePath.path.dropFirst())
         : sourcePath.path
       let destination = destinationURL.appendingPathComponent(relativePath)
@@ -280,7 +284,8 @@ private func render(node: FileNode, into lines: inout [String], indent: String) 
 
 private func fileSummary(data: Data) -> String {
   if data.count < 50, let string = String(data: data, encoding: .utf8) {
-    let sanitized = string
+    let sanitized =
+      string
       .replacingOccurrences(of: "\n", with: "\\n")
       .replacingOccurrences(of: "\r", with: "\\r")
       .replacingOccurrences(of: "\t", with: "\\t")
