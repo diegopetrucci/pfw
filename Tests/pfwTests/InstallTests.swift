@@ -293,27 +293,69 @@ extension BaseSuite {
         }
       }
 
-      // NB: This test shows a problem with using the '--path' option that we need to fix.
-      //      @Test(
-      //        .dependencies {
-      //          try $0.fileSystem.createDirectory(
-      //            at: URL(filePath: "/Users/blob/.copilot/skills"),
-      //            withIntermediateDirectories: true
-      //          )
-      //          try $0.fileSystem.write(
-      //            Data("Hello".utf8),
-      //            to: URL(filePath: "/Users/blob/.copilot/skills/dont-delete.md")
-      //          )
-      //        }
-      //      )
-      //      func customPath() async throws {
-      //        try await assertCommand(["install", "--path", "/Users/blob/.copilot/skills"]) {
-      //          """
-      //          Installed skills into /Users/blob/.copilot/skills
-      //          """
-      //        }
-      //        assertInlineSnapshot(of: fileSystem, as: .description)
-      //      }
+      @Test func tildePath() async throws {
+        try await assertCommand(["install", "--path", "~/.codex"]) {
+          """
+          Installed skills into /Users/blob/.codex
+          """
+        }
+        assertInlineSnapshot(of: fileSystem, as: .description) {
+          """
+          Users/
+            blob/
+              .codex/
+                pfw-ComposableArchitecture/
+                  SKILL.md "# Composable Architecture"
+                  references/
+                    navigation.md "# Navigation"
+                pfw-SQLiteData/
+                  SKILL.md "# SQLiteData"
+              .pfw/
+                machine "00000000-0000-0000-0000-000000000001"
+                token "deadbeef"
+          tmp/
+          """
+        }
+      }
+
+      @Test(
+        .dependencies {
+          try $0.fileSystem.createDirectory(
+            at: URL(filePath: "/Users/blob/.copilot/skills"),
+            withIntermediateDirectories: true
+          )
+          try $0.fileSystem.write(
+            Data("Hello".utf8),
+            to: URL(filePath: "/Users/blob/.copilot/skills/dont-delete.md")
+          )
+        }
+      )
+      func customPath() async throws {
+        try await assertCommand(["install", "--path", "/Users/blob/.copilot/skills"]) {
+          """
+          Installed skills into /Users/blob/.copilot/skills
+          """
+        }
+        assertInlineSnapshot(of: fileSystem, as: .description) {
+          """
+          Users/
+            blob/
+              .copilot/
+                skills/
+                  dont-delete.md "Hello"
+                  pfw-ComposableArchitecture/
+                    SKILL.md "# Composable Architecture"
+                    references/
+                      navigation.md "# Navigation"
+                  pfw-SQLiteData/
+                    SKILL.md "# SQLiteData"
+              .pfw/
+                machine "00000000-0000-0000-0000-000000000001"
+                token "deadbeef"
+          tmp/
+          """
+        }
+      }
     }
   }
 }

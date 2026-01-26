@@ -83,7 +83,13 @@ struct Install: AsyncParsableCommand {
     try fileSystem.write(data, to: zipURL)
 
     let installPath = path ?? tool?.defaultInstallPath.path ?? ""
-    let skillsURL = URL(fileURLWithPath: installPath)
+    let expandedPath: String
+    if installPath.hasPrefix("~/") {
+      expandedPath = fileSystem.homeDirectoryForCurrentUser.path + "/" + installPath.dropFirst(2)
+    } else {
+      expandedPath = installPath
+    }
+    let skillsURL = URL(fileURLWithPath: expandedPath)
     try fileSystem.createDirectory(at: skillsURL, withIntermediateDirectories: true)
 
     let tempUnzipURL = type(of: fileSystem).temporaryDirectory.appending(path: uuid().uuidString)
