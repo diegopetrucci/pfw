@@ -17,10 +17,7 @@ extension BaseSuite {
     }
   )
   struct LogoutTests {
-    @Dependency(\.fileSystem) var fileSystem
-    var inMemoryFileSystem: InMemoryFileSystem {
-      fileSystem as! InMemoryFileSystem
-    }
+    @Dependency(\.fileSystem, as: InMemoryFileSystem.self) var fileSystem
 
     @Test(
       .dependencies { _ in 
@@ -39,7 +36,7 @@ extension BaseSuite {
         Users/
           blob/
             .pfw/
-              machine (36 bytes)
+              machine "00000000-0000-0000-0000-000000000000"
         """
       }
     }

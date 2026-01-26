@@ -12,10 +12,7 @@ extension BaseSuite {
     }
   )
   struct InMemoryFileSystemTests {
-    var fileSystem: InMemoryFileSystem {
-      @Dependency(\.fileSystem) var fileSystem
-      return fileSystem as! InMemoryFileSystem
-    }
+    @Dependency(\.fileSystem, as: InMemoryFileSystem.self) var fileSystem
 
     @Test func createDirectoryMissingParentWithoutIntermediatesThrows() throws {
       let target = URL(fileURLWithPath: "/root/a/b", isDirectory: true)

@@ -92,6 +92,7 @@ final class InMemoryFileSystem: FileSystem {
     self.state = LockIsolated(state)
     self.state.withValue {
       _ = $0.directories.insert(normalize(homeDirectoryForCurrentUser))
+      _ = $0.directories.insert(normalize(Self.temporaryDirectory))
     }
   }
 

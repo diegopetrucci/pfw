@@ -8,14 +8,8 @@ import Testing
 
 extension BaseSuite {
   @Suite struct LoginTests {
-    @Dependency(\.fileSystem) var fileSystem
-    @Dependency(\.openInBrowser) var openInBrowser
-    var mockOpenInBrowser: MockOpenInBrowser {
-      openInBrowser as! MockOpenInBrowser
-    }
-    var inMemoryFileSystem: InMemoryFileSystem {
-      fileSystem as! InMemoryFileSystem
-    }
+    @Dependency(\.fileSystem, as: InMemoryFileSystem.self) var fileSystem
+    @Dependency(\.openInBrowser, as: MockOpenInBrowser.self) var openInBrowser
 
     @Test(
       .dependencies {
@@ -35,7 +29,7 @@ extension BaseSuite {
         Saved token to /Users/blob/.pfw/token.
         """
       }
-      mockOpenInBrowser.assertOpenedURLs([
+      openInBrowser.assertOpenedURLs([
         URL(
           string:
             "http://localhost:8080/account/the-way/login?whoami=blob&machine=00000000-0000-0000-0000-000000000000&redirect=http://localhost:1234/callback"

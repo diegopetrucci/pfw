@@ -1,11 +1,6 @@
 import ArgumentParser
 import Dependencies
 import Foundation
-import ZIPFoundation
-
-#if canImport(FoundationNetworking)
-  import FoundationNetworking
-#endif
 
 struct Install: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
@@ -18,7 +13,7 @@ struct Install: AsyncParsableCommand {
     var defaultInstallPath: URL {
       @Dependency(\.fileSystem) var fileSystem
       return fileSystem.homeDirectoryForCurrentUser
-        .appending(path: rawValue)
+        .appending(path: ".\(rawValue)")
         .appending(path: "skills/the-point-free-way")
     }
   }
@@ -39,37 +34,43 @@ struct Install: AsyncParsableCommand {
   }
 
   private func install(shouldRetryAfterLogin: Bool) async throws {
+    @Dependency(\.pointFreeServer) var pointFreeServer
     @Dependency(\.fileSystem) var fileSystem
     @Dependency(\.uuid) var uuid
     @Dependency(\.whoAmI) var whoAmI
 
     let token = try loadToken()
     let machine = try machine()
-
-    let (data, response) = try await URLSession.shared
-      .data(
-        from: URL(
-          string:
-            "\(URL.baseURL)/account/the-way/download?token=\(token)&machine=\(machine)&whoami=\(whoAmI())"
-        )!
+    let data: Data
+    do {
+      data = try await pointFreeServer.downloadSkills(
+        token: token,
+        machine: machine,
+        whoami: whoAmI()
       )
-
-    let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
-    if statusCode == 401 || statusCode == 403 {
-      guard shouldRetryAfterLogin else {
-        print(String(decoding: data, as: UTF8.self))
+    } catch let error as PointFreeServerError {
+      switch error {
+      case let .notLoggedIn(message):
+        guard shouldRetryAfterLogin else {
+          if let message, !message.isEmpty {
+            print(message)
+          }
+          return
+        }
+        print("Authentication failed. Starting login flow...")
+        try await performLogin(token: nil)
+        print("Login complete. Retrying install...")
+        try await install(shouldRetryAfterLogin: false)
+        return
+      case let .serverError(message):
+        if let message, !message.isEmpty {
+          print(message)
+        }
+        return
+      case .invalidResponse:
+        print("Unexpected response from server.")
         return
       }
-      print("Authentication failed. Starting login flow...")
-      try await performLogin(token: nil)
-      print("Login complete. Retrying install...")
-      try await install(shouldRetryAfterLogin: false)
-      return
-    }
-
-    guard statusCode == 200 else {
-      print(String(decoding: data, as: UTF8.self))
-      return
     }
 
     let zipURL = type(of: fileSystem).temporaryDirectory.appending(path: uuid().uuidString)
