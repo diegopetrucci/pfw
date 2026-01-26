@@ -223,6 +223,50 @@ extension BaseSuite {
         }
       }
 
+      @Test func deletesOldPFWDirectory() async throws {
+        try fileSystem.createDirectory(
+          at: URL(filePath: "/Users/blob/.codex/skills/the-point-free-way"),
+          withIntermediateDirectories: true
+        )
+        assertInlineSnapshot(of: fileSystem, as: .description) {
+          """
+          Users/
+            blob/
+              .codex/
+                skills/
+                  the-point-free-way/
+              .pfw/
+                machine "00000000-0000-0000-0000-000000000000"
+                token "deadbeef"
+          tmp/
+          """
+        }
+
+        try await assertCommand(["install", "--tool", "codex"]) {
+          """
+          Installed skills for codex into /Users/blob/.codex/skills
+          """
+        }
+        assertInlineSnapshot(of: fileSystem, as: .description) {
+          """
+          Users/
+            blob/
+              .codex/
+                skills/
+                  pfw-ComposableArchitecture/
+                    SKILL.md "# Composable Architecture"
+                    references/
+                      navigation.md "# Navigation"
+                  pfw-SQLiteData/
+                    SKILL.md "# SQLiteData"
+              .pfw/
+                machine "00000000-0000-0000-0000-000000000001"
+                token "deadbeef"
+          tmp/
+          """
+        }
+      }
+
       @Test func claude() async throws {
         try await assertCommand(["install", "--tool", "claude"]) {
           """
