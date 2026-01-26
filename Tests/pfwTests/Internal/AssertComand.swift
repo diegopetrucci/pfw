@@ -35,7 +35,6 @@ func assertCommand(
 
 func assertCommandThrows(
   _ arguments: [String],
-  stderr: (() -> String)? = nil,
   error: (() -> String)? = nil,
   fileID: StaticString = #fileID,
   file: StaticString = #filePath,
