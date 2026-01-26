@@ -1,4 +1,3 @@
-import InlineSnapshotTesting
 import Dependencies
 import DependenciesTestSupport
 import Foundation

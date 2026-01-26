@@ -20,9 +20,18 @@ extension BaseSuite {
   @MainActor struct InstallTests {
     @Dependency(\.continuousClock, as: TestClock<Duration>.self) var clock
     @Dependency(\.fileSystem, as: InMemoryFileSystem.self) var fileSystem
+    @Dependency(\.openInBrowser, as: MockOpenInBrowser.self) var openInBrowser
 
-    @Test func noToolSpecified() async throws {
+    @Test func noToolOrPathSpecified() async throws {
       await assertCommandThrows(["install"]) {
+        """
+        Provide either --tool or --path.
+        """
+      }
+    }
+
+    @Test func bothToolAndPathSpecified() async throws {
+      await assertCommandThrows(["install", "--tool", "codex", "--path", "/User/blob/.codex"]) {
         """
         Provide either --tool or --path.
         """
@@ -83,6 +92,12 @@ extension BaseSuite {
       try await Task.sleep(for: .seconds(0.5))
       await clock.run()
       try await task.value
+      openInBrowser.assertOpenedURLs([
+        URL(
+          string:
+            "http://localhost:8080/account/the-way/login?whoami=blob&machine=00000000-0000-0000-0000-000000000001&redirect=http://localhost:1234/callback"
+        )!
+      ])
       assertInlineSnapshot(of: fileSystem, as: .description) {
         """
         Users/
@@ -104,8 +119,7 @@ extension BaseSuite {
 
     @Suite(
       .dependencies {
-        var command = try #require(try PFW.parseAsRoot(["login"]) as? AsyncParsableCommand)
-        try await command.run()
+        try await $0.login()
         $0.pointFreeServer = InMemoryPointFreeServer(
           result: .success(
             try [

@@ -30,21 +30,8 @@ struct LiveWhoAmI: WhoAmI {
   }
 }
 
-struct TestWhoAmI: WhoAmI {
-  var value: String
-
-  init(_ value: String = "blob") {
-    self.value = value
-  }
-
-  func callAsFunction() -> String {
-    value
-  }
-}
-
 enum WhoAmIKey: DependencyKey {
   static var liveValue: any WhoAmI { LiveWhoAmI() }
-  static var testValue: any WhoAmI { TestWhoAmI() }
 }
 
 extension DependencyValues {

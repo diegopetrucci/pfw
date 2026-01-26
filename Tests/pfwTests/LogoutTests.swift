@@ -1,4 +1,3 @@
-import ArgumentParser
 import Dependencies
 import DependenciesTestSupport
 import Foundation
@@ -20,9 +19,8 @@ extension BaseSuite {
     @Dependency(\.fileSystem, as: InMemoryFileSystem.self) var fileSystem
 
     @Test(
-      .dependencies { _ in 
-        var command = try #require(try PFW.parseAsRoot(["login"]) as? AsyncParsableCommand)
-        try await command.run()
+      .dependencies { 
+        try await $0.login()
       }
     )
     func logout() async throws {

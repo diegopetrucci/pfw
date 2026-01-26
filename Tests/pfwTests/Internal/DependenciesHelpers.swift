@@ -1,4 +1,15 @@
 import Dependencies
+import Testing
+
+@testable import pfw
+
+extension DependencyValues {
+  func login() async throws {
+    var command = try #require(try PFW.parseAsRoot(["login"]) as? AsyncParsableCommand)
+    try await command.run()
+    (openInBrowser as! MockOpenInBrowser).skipAssertions()
+  }
+}
 
 extension Dependency {
   public init<T>(

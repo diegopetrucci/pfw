@@ -30,7 +30,7 @@ struct Install: AsyncParsableCommand {
   var path: String?
 
   func validate() throws {
-    guard tool != nil || path != nil else {
+    guard (tool != nil) != (path != nil) else {
       throw ValidationError("Provide either --tool or --path.")
     }
   }
