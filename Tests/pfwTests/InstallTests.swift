@@ -51,17 +51,20 @@ extension BaseSuite {
     @Test(
       .dependencies { dependencies in
         try save(token: "expired-deadbeef")
-        dependencies.pointFreeServer = InMemoryPointFreeServer.init(
+        dependencies.pointFreeServer = InMemoryPointFreeServer(
           results: [
             .failure(.notLoggedIn("Token expired")),
             .success(
-              try [
-                URL(filePath: "/skills/ComposableArchitecture/SKILL.md"): Data(
-                  """
-                  # Composable Architecture
-                  """.utf8
-                )
-              ].toData
+              .data(
+                try [
+                  URL(filePath: "/skills/ComposableArchitecture/SKILL.md"): Data(
+                    """
+                    # Composable Architecture
+                    """.utf8
+                  )
+                ].toData,
+                etag: "cafebeef"
+              )
             ),
           ]
         )
@@ -111,6 +114,7 @@ extension BaseSuite {
                   SKILL.md "# Composable Architecture"
             .pfw/
               machine "00000000-0000-0000-0000-000000000002"
+              sha "cafebeef"
               token "deadbeef"
         tmp/
         """
@@ -122,23 +126,26 @@ extension BaseSuite {
         try await $0.login()
         $0.pointFreeServer = InMemoryPointFreeServer(
           result: .success(
-            try [
-              URL(filePath: "/skills/ComposableArchitecture/SKILL.md"): Data(
-                """
-                # Composable Architecture
-                """.utf8
-              ),
-              URL(filePath: "/skills/ComposableArchitecture/references/navigation.md"): Data(
-                """
-                # Navigation
-                """.utf8
-              ),
-              URL(filePath: "/skills/SQLiteData/SKILL.md"): Data(
-                """
-                # SQLiteData
-                """.utf8
-              ),
-            ].toData
+            .data(
+              try [
+                URL(filePath: "/skills/ComposableArchitecture/SKILL.md"): Data(
+                  """
+                  # Composable Architecture
+                  """.utf8
+                ),
+                URL(filePath: "/skills/ComposableArchitecture/references/navigation.md"): Data(
+                  """
+                  # Navigation
+                  """.utf8
+                ),
+                URL(filePath: "/skills/SQLiteData/SKILL.md"): Data(
+                  """
+                  # SQLiteData
+                  """.utf8
+                ),
+              ].toData,
+              etag: "cafebeef"
+            )
           )
         )
       }
@@ -168,6 +175,7 @@ extension BaseSuite {
                     SKILL.md "# SQLiteData"
               .pfw/
                 machine "00000000-0000-0000-0000-000000000001"
+                sha "cafebeef"
                 token "deadbeef"
           tmp/
           """
@@ -224,6 +232,7 @@ extension BaseSuite {
                     SKILL.md "# SQLiteData"
               .pfw/
                 machine "00000000-0000-0000-0000-000000000001"
+                sha "cafebeef"
                 token "deadbeef"
           tmp/
           """
@@ -270,6 +279,7 @@ extension BaseSuite {
                     SKILL.md "# SQLiteData"
               .pfw/
                 machine "00000000-0000-0000-0000-000000000001"
+                sha "cafebeef"
                 token "deadbeef"
           tmp/
           """
@@ -298,6 +308,7 @@ extension BaseSuite {
                     SKILL.md "# SQLiteData"
               .pfw/
                 machine "00000000-0000-0000-0000-000000000001"
+                sha "cafebeef"
                 token "deadbeef"
           tmp/
           """
@@ -325,6 +336,7 @@ extension BaseSuite {
                   SKILL.md "# SQLiteData"
               .pfw/
                 machine "00000000-0000-0000-0000-000000000001"
+                sha "cafebeef"
                 token "deadbeef"
           tmp/
           """
@@ -366,6 +378,7 @@ extension BaseSuite {
                     SKILL.md "# SQLiteData"
               .pfw/
                 machine "00000000-0000-0000-0000-000000000001"
+                sha "cafebeef"
                 token "deadbeef"
           tmp/
           """

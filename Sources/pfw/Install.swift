@@ -29,6 +29,9 @@ struct Install: AsyncParsableCommand {
   @Option(help: "Directory to install skills into.")
   var path: String?
 
+  @Flag(help: "Ignore the local SHA and always download.")
+  var force = false
+
   func validate() throws {
     guard (tool != nil) != (path != nil) else {
       throw ValidationError("Provide either --tool or --path.")
@@ -47,13 +50,23 @@ struct Install: AsyncParsableCommand {
 
     let token = try loadToken()
     let machine = try machine()
+    let sha = force ? nil : loadSHA()
     let data: Data
     do {
-      data = try await pointFreeServer.downloadSkills(
+      let response = try await pointFreeServer.downloadSkills(
         token: token,
         machine: machine,
-        whoami: whoAmI()
+        whoami: whoAmI(),
+        sha: sha
       )
+      switch response {
+      case let .data(downloadedData, etag: etag):
+        data = downloadedData
+        try save(sha: etag)
+      case .notModified:
+        print("Skills already up to date.")
+        return
+      }
     } catch let error as PointFreeServerError {
       switch error {
       case .notLoggedIn(let message):
@@ -72,6 +85,9 @@ struct Install: AsyncParsableCommand {
         if let message, !message.isEmpty {
           print(message)
         }
+        return
+      case .missingEtag:
+        print("Server response error. Contact support@pointfree.co if problem persists.")
         return
       case .invalidResponse:
         print("Unexpected response from server.")
