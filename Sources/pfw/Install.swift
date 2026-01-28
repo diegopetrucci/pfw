@@ -104,7 +104,8 @@ struct Install: AsyncParsableCommand {
     }
 
     let existing = (try? fileSystem.contentsOfDirectory(at: skillsURL)) ?? []
-    for url in existing where url.lastPathComponent.hasPrefix("pfw-")
+    for url in existing
+    where url.lastPathComponent.hasPrefix("pfw-")
       || url.lastPathComponent == "the-point-free-way"
     {
       try? fileSystem.removeItem(at: url)
