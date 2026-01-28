@@ -15,7 +15,10 @@ extension BaseSuite {
         token: "deadbeef"
       )
       $0.continuousClock = TestClock()
-    }
+    },
+    .snapshots(
+      // record: .failed
+    ),
   )
   @MainActor struct InstallTests {
     @Dependency(\.continuousClock, as: TestClock<Duration>.self) var clock
@@ -105,6 +108,7 @@ extension BaseSuite {
             .codex/
               skills/
                 pfw-ComposableArchitecture/
+                  .gitignore "*"
                   SKILL.md "# Composable Architecture"
             .pfw/
               machine "00000000-0000-0000-0000-000000000002"
@@ -156,10 +160,12 @@ extension BaseSuite {
               .codex/
                 skills/
                   pfw-ComposableArchitecture/
+                    .gitignore "*"
                     SKILL.md "# Composable Architecture"
                     references/
                       navigation.md "# Navigation"
                   pfw-SQLiteData/
+                    .gitignore "*"
                     SKILL.md "# SQLiteData"
               .pfw/
                 machine "00000000-0000-0000-0000-000000000001"
@@ -210,10 +216,12 @@ extension BaseSuite {
               .codex/
                 skills/
                   pfw-ComposableArchitecture/
+                    .gitignore "*"
                     SKILL.md "# Composable Architecture"
                     references/
                       navigation.md "# Navigation"
                   pfw-SQLiteData/
+                    .gitignore "*"
                     SKILL.md "# SQLiteData"
               .pfw/
                 machine "00000000-0000-0000-0000-000000000001"
@@ -254,10 +262,12 @@ extension BaseSuite {
               .codex/
                 skills/
                   pfw-ComposableArchitecture/
+                    .gitignore "*"
                     SKILL.md "# Composable Architecture"
                     references/
                       navigation.md "# Navigation"
                   pfw-SQLiteData/
+                    .gitignore "*"
                     SKILL.md "# SQLiteData"
               .pfw/
                 machine "00000000-0000-0000-0000-000000000001"
@@ -280,10 +290,12 @@ extension BaseSuite {
               .claude/
                 skills/
                   pfw-ComposableArchitecture/
+                    .gitignore "*"
                     SKILL.md "# Composable Architecture"
                     references/
                       navigation.md "# Navigation"
                   pfw-SQLiteData/
+                    .gitignore "*"
                     SKILL.md "# SQLiteData"
               .pfw/
                 machine "00000000-0000-0000-0000-000000000001"
@@ -305,10 +317,12 @@ extension BaseSuite {
             blob/
               .codex/
                 pfw-ComposableArchitecture/
+                  .gitignore "*"
                   SKILL.md "# Composable Architecture"
                   references/
                     navigation.md "# Navigation"
                 pfw-SQLiteData/
+                  .gitignore "*"
                   SKILL.md "# SQLiteData"
               .pfw/
                 machine "00000000-0000-0000-0000-000000000001"
@@ -344,10 +358,12 @@ extension BaseSuite {
                 skills/
                   dont-delete.md "Hello"
                   pfw-ComposableArchitecture/
+                    .gitignore "*"
                     SKILL.md "# Composable Architecture"
                     references/
                       navigation.md "# Navigation"
                   pfw-SQLiteData/
+                    .gitignore "*"
                     SKILL.md "# SQLiteData"
               .pfw/
                 machine "00000000-0000-0000-0000-000000000001"
