@@ -25,21 +25,25 @@ struct Install: AsyncParsableCommand {
 
       switch self {
       case .antigravity:
-        return home
+        return
+          home
           .appending(path: ".gemini")
           .appending(path: "antigravity")
           .appending(path: "global_skills")
       case .opencode:
-        return home
+        return
+          home
           .appending(path: ".config")
           .appending(path: "opencode")
           .appending(path: "skills")
       case .droid:
-        return home
+        return
+          home
           .appending(path: ".factory")
           .appending(path: "skills")
       default:
-        return home
+        return
+          home
           .appending(path: ".\(rawValue)")
           .appending(path: "skills")
       }
