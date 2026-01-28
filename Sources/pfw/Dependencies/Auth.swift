@@ -153,8 +153,8 @@ private final class AuthHTTPHandler: ChannelInboundHandler, @unchecked Sendable 
 
   private static func token(from uri: String) -> String? {
     guard let components = URLComponents(string: "http://localhost\(uri)"),
-          let token = components.queryItems?.first(where: { $0.name == "token" })?.value,
-          !token.isEmpty
+      let token = components.queryItems?.first(where: { $0.name == "token" })?.value,
+      !token.isEmpty
     else { return nil }
     return token
   }
