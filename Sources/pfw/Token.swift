@@ -1,37 +1,45 @@
 import ArgumentParser
+import Dependencies
 import Foundation
 
 func machine() throws -> UUID {
-  try FileManager.default.createDirectory(at: pfwDirectoryURL, withIntermediateDirectories: true)
+  @Dependency(\.fileSystem) var fileSystem
+  @Dependency(\.uuid) var uuid
+  try fileSystem.createDirectory(at: pfwDirectoryURL, withIntermediateDirectories: true)
   if let currentMachineData = try? Data(contentsOf: machineURL),
     let currentMachine = UUID(uuidString: String(decoding: currentMachineData, as: UTF8.self))
   {
     return currentMachine
   } else {
-    try? FileManager.default.removeItem(at: machineURL)
-    let newMachine = UUID()
-    try newMachine.uuidString.write(to: machineURL, atomically: true, encoding: .utf8)
+    try? fileSystem.removeItem(at: machineURL)
+    let newMachine = uuid()
+    try fileSystem.write(Data(newMachine.uuidString.utf8), to: machineURL)
     return newMachine
   }
-
 }
 
-let pfwDirectoryURL = FileManager.default.homeDirectoryForCurrentUser
-  .appendingPathComponent(".pfw", isDirectory: true)
+var pfwDirectoryURL: URL {
+  @Dependency(\.fileSystem) var fileSystem
+  return fileSystem.homeDirectoryForCurrentUser
+    .appendingPathComponent(".pfw", isDirectory: true)
+}
 
 let machineURL = pfwDirectoryURL.appendingPathComponent("machine")
 let tokenURL = pfwDirectoryURL.appendingPathComponent("token")
 
 func save(token: String) throws {
-  try FileManager.default.createDirectory(at: pfwDirectoryURL, withIntermediateDirectories: true)
-  try token.trimmingCharacters(in: .whitespacesAndNewlines)
-    .write(to: tokenURL, atomically: true, encoding: .utf8)
+  @Dependency(\.fileSystem) var fileSystem
+  try fileSystem.createDirectory(at: pfwDirectoryURL, withIntermediateDirectories: true)
+  try fileSystem.write(
+    Data(token.trimmingCharacters(in: .whitespacesAndNewlines).utf8),
+    to: tokenURL
+  )
 }
 
 func loadToken() throws -> String {
-  guard FileManager.default.fileExists(atPath: tokenURL.path) else {
+  @Dependency(\.fileSystem) var fileSystem
+  guard fileSystem.fileExists(atPath: tokenURL.path) else {
     throw ValidationError("No token found. Run `pfw login` first.")
   }
-  return try String(contentsOf: tokenURL, encoding: .utf8)
-    .trimmingCharacters(in: .whitespacesAndNewlines)
+  return try String(decoding: fileSystem.data(at: tokenURL), as: UTF8.self)
 }

@@ -1,10 +1,6 @@
 import ArgumentParser
+import Dependencies
 import Foundation
-import ZIPFoundation
-
-#if canImport(FoundationNetworking)
-  import FoundationNetworking
-#endif
 
 struct Install: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
@@ -15,7 +11,10 @@ struct Install: AsyncParsableCommand {
     case codex
     case claude
     var defaultInstallPath: URL {
-      URL(filePath: "~/.\(rawValue)/skills/the-point-free-way")
+      @Dependency(\.fileSystem) var fileSystem
+      return fileSystem.homeDirectoryForCurrentUser
+        .appending(path: ".\(rawValue)")
+        .appending(path: "skills/the-point-free-way")
     }
   }
 
@@ -25,52 +24,72 @@ struct Install: AsyncParsableCommand {
       Options: \(Tool.allCases.map(\.rawValue).joined(separator: ", ")).
       """
   )
-  var tool: Tool = .codex
+  var tool: Tool?
 
   @Option(help: "Directory to install skills into.")
   var path: String?
+
+  func validate() throws {
+    guard (tool != nil) != (path != nil) else {
+      throw ValidationError("Provide either --tool or --path.")
+    }
+  }
 
   func run() async throws {
     try await install(shouldRetryAfterLogin: true)
   }
 
   private func install(shouldRetryAfterLogin: Bool) async throws {
+    @Dependency(\.pointFreeServer) var pointFreeServer
+    @Dependency(\.fileSystem) var fileSystem
+    @Dependency(\.uuid) var uuid
+    @Dependency(\.whoAmI) var whoAmI
+
     let token = try loadToken()
     let machine = try machine()
-    let whoami = whoAmI()
-
-    let (data, response) = try await URLSession.shared
-      .data(
-        from: URL(
-          string:
-            "\(URL.baseURL)/account/the-way/download?token=\(token)&machine=\(machine)&whoami=\(whoami)"
-        )!
+    let data: Data
+    do {
+      data = try await pointFreeServer.downloadSkills(
+        token: token,
+        machine: machine,
+        whoami: whoAmI()
       )
-
-    let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
-    if statusCode == 401 || statusCode == 403 {
-      guard shouldRetryAfterLogin else {
-        print(String(decoding: data, as: UTF8.self))
+    } catch let error as PointFreeServerError {
+      switch error {
+      case .notLoggedIn(let message):
+        guard shouldRetryAfterLogin else {
+          if let message, !message.isEmpty {
+            print(message)
+          }
+          return
+        }
+        print("Authentication failed. Starting login flow...")
+        try await performLogin(token: nil)
+        print("Login complete. Retrying install...")
+        try await install(shouldRetryAfterLogin: false)
+        return
+      case .serverError(let message):
+        if let message, !message.isEmpty {
+          print(message)
+        }
+        return
+      case .invalidResponse:
+        print("Unexpected response from server.")
         return
       }
-      print("Authentication failed. Starting login flow...")
-      try await performLogin(token: nil)
-      print("Login complete. Retrying install...")
-      try await install(shouldRetryAfterLogin: false)
-      return
     }
 
-    guard statusCode == 200 else {
-      print(String(decoding: data, as: UTF8.self))
-      return
+    let zipURL = type(of: fileSystem).temporaryDirectory.appending(path: uuid().uuidString)
+    try fileSystem.write(data, to: zipURL)
+
+    let installPath = path ?? tool?.defaultInstallPath.path ?? ""
+    let installURL = URL(fileURLWithPath: installPath)
+    try? fileSystem.removeItem(at: installURL)
+    try fileSystem.unzipItem(at: zipURL, to: installURL)
+    if let tool {
+      print("Installed skills for \(tool.rawValue) into \(installURL.path)")
+    } else {
+      print("Installed skills into \(installURL.path)")
     }
-
-    let zipURL = URL.temporaryDirectory.appending(path: UUID().uuidString)
-    try data.write(to: zipURL)
-
-    let installURL = URL(fileURLWithPath: path ?? tool.defaultInstallPath.path)
-    try? FileManager.default.removeItem(at: installURL)
-    try FileManager.default.unzipItem(at: zipURL, to: installURL)
-    print("Installed skills for \(tool.rawValue) into \(installURL.path)")
   }
 }
