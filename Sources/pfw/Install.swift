@@ -93,7 +93,7 @@ struct Install: AsyncParsableCommand {
     } else {
       installTargets =
         tools.map { (tool: $0, path: $0.defaultInstallPath.path) }
-          + paths.map { (tool: nil, path: $0) }
+        + paths.map { (tool: nil, path: $0) }
     }
 
     let token = try loadToken()
@@ -190,7 +190,8 @@ struct Install: AsyncParsableCommand {
         try? fileSystem.removeItem(at: url)
       }
 
-      let centralSkillDirectories = (try? fileSystem.contentsOfDirectory(at: centralSkillsURL)) ?? []
+      let centralSkillDirectories =
+        (try? fileSystem.contentsOfDirectory(at: centralSkillsURL)) ?? []
       for directory in centralSkillDirectories {
         let toolDestination = skillsURL.appendingPathComponent("pfw-\(directory.lastPathComponent)")
         try fileSystem.createSymbolicLink(at: toolDestination, withDestinationURL: directory)
