@@ -602,6 +602,66 @@ extension BaseSuite {
         }
       }
 
+      @Test func amp() async throws {
+        try await assertCommand(["install", "--tool", "amp"]) {
+          """
+          Installed skills for amp into /Users/blob/.agents/skills
+          """
+        }
+        assertInlineSnapshot(of: fileSystem, as: .description) {
+          """
+          Users/
+            blob/
+              .agents/
+                skills/
+                  pfw-ComposableArchitecture@ -> /Users/blob/.pfw/skills/ComposableArchitecture
+                  pfw-SQLiteData@ -> /Users/blob/.pfw/skills/SQLiteData
+              .pfw/
+                machine "00000000-0000-0000-0000-000000000001"
+                sha "cafebeef"
+                skills/
+                  ComposableArchitecture/
+                    SKILL.md "# Composable Architecture"
+                    references/
+                      navigation.md "# Navigation"
+                  SQLiteData/
+                    SKILL.md "# SQLiteData"
+                token "deadbeef"
+          tmp/
+          """
+        }
+      }
+
+      @Test func agents() async throws {
+        try await assertCommand(["install", "--tool", "agents"]) {
+          """
+          Installed skills for agents into /Users/blob/.agents/skills
+          """
+        }
+        assertInlineSnapshot(of: fileSystem, as: .description) {
+          """
+          Users/
+            blob/
+              .agents/
+                skills/
+                  pfw-ComposableArchitecture@ -> /Users/blob/.pfw/skills/ComposableArchitecture
+                  pfw-SQLiteData@ -> /Users/blob/.pfw/skills/SQLiteData
+              .pfw/
+                machine "00000000-0000-0000-0000-000000000001"
+                sha "cafebeef"
+                skills/
+                  ComposableArchitecture/
+                    SKILL.md "# Composable Architecture"
+                    references/
+                      navigation.md "# Navigation"
+                  SQLiteData/
+                    SKILL.md "# SQLiteData"
+                token "deadbeef"
+          tmp/
+          """
+        }
+      }
+
       @Test func tildePath() async throws {
         try await assertCommand(["install", "--path", "~/.codex"]) {
           """

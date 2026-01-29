@@ -38,3 +38,5 @@ A CLI tool for downloading and managing [Point-Free Way](https://www.pointfree.c
 | OpenCode | `~/.config/opencode/skills` | [OpenCode Skills](https://opencode.ai/docs/skills/) |
 | Kimi | `~/.kimi/skills` | [Kimi CLI Skills](https://moonshotai.github.io/kimi-cli/en/customization/skills) |
 | Droid | `~/.factory/skills` | [Factory Droid Skills](https://docs.factory.ai/cli/configuration/skills) |
+| Amp | `~/.amp/skills` | [Amp Agent Skills](https://ampcode.com/manual#agent-skills) |
+| Agents (generic) | `~/.agents/skills` | No public documentation |

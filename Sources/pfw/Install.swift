@@ -18,6 +18,8 @@ struct Install: AsyncParsableCommand {
     case opencode
     case kimi
     case droid
+    case amp
+    case agents
 
     var defaultInstallPath: URL {
       @Dependency(\.fileSystem) var fileSystem
@@ -40,6 +42,11 @@ struct Install: AsyncParsableCommand {
         return
           home
           .appending(path: ".factory")
+          .appending(path: "skills")
+      case .amp:
+        return
+          home
+          .appending(path: ".agents")
           .appending(path: "skills")
       default:
         return
